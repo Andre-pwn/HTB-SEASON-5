@@ -17,7 +17,7 @@ port service
 3.1) search for common cve on teamcity -> found CVE-2023-42793 with a poc (https://www.exploit-db.com/exploits/51884)
 3.2) execute poc to get teamcity username and password
 
-4.1) from the web interface download the project backup and analyze the content -> found 1 database file with 3 usernames and password hashes and 1 id_rsa file
+4.1) from the web interface download the project backup and analyze the content -> found 1 database file with 2 usernames and password hashes (john and matthew) and 1 id_rsa file
 4.2) from the project history it is possible to find the owner (john)
 
 5.1) ssh -i id_rsa john@runner.htb
@@ -26,3 +26,12 @@ port service
 6.1) upload and execute linpeas
 6.2) it seemed ok at first sight, so I scraped throught the root directories finding portrainer directory in opt
 6.2) looking at linpeas output again, I found the /etc/hosts file which has got another vhost/subdomain called portainer-administration.runner.htb
+6.3) the potrainer web interface requires credentials
+6.4) cracking previously found hashes -> matthew password
+
+7.1) container web environment, expected rce from the shell of a deployed image (?)
+7.2) add new container with the image of ubuntu found in the web interface
+7.3) deploy the container enterig a working dir (paths like /mnt/tmp)
+7.4) from the container console get the root flag
+
+
