@@ -1,0 +1,28 @@
+Name: Runner
+Difficulty: Medium
+OS: Linux
+
+1) nmap scan:
+port service
+22   ssh
+80   http
+8000 http-alt
+
+2.1) add ip domain to /etc/hosts
+2.2) web page scraping -> found nothing interesting
+2.3) ffuf recursively folders and files from common wordlist -> found nothing interesting
+2.4) ffuf recursively subdomains from common wordlist -> found nothing interesting
+2.5) cewl to estrapolate a wordlist from the webpage into domain and subdomain enum with ffuf -> found teamcity.runner.htb
+
+3.1) search for common cve on teamcity -> found CVE-2023-42793 with a poc (https://www.exploit-db.com/exploits/51884)
+3.2) execute poc to get teamcity username and password
+
+4.1) from the web interface download the project backup and analyze the content -> found 1 database file with 3 usernames and password hashes and 1 id_rsa file
+4.2) from the project history it is possible to find the owner (john)
+
+5.1) ssh -i id_rsa john@runner.htb
+5.2) get the user flag.
+
+6.1) upload and execute linpeas
+6.2) it seemed ok at first sight, so I scraped throught the root directories finding portrainer directory in opt
+6.2) looking at linpeas output again, I found the /etc/hosts file which has got another vhost/subdomain called portainer-administration.runner.htb
