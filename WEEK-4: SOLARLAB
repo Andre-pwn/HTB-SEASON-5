@@ -1,1 +1,40 @@
+Name: SolarLab
+Difficulty: Medium
+OS: Windows
+
+1) nmap
+PORT STATE SERVICE VERSION
+80/tcp open http nginx 1.24.0
+|_http-server-header: nginx/1.24.0
+|_http-title: SolarLab Instant Messenger
+135/tcp open msrpc Microsoft Windows RPC
+139/tcp open netbios-ssn Microsoft Windows netbios-ssn
+445/tcp open microsoft-ds?
+6791/tcp open http nginx 1.24.0
+
+2) web enumeration on port 80 but nothing interesting
+2.1) port 6791 redirects to http://report.solarlab.htb with a login form
+
+3) smb enumeration 
+3.1) smbclient -L //solarlab.htb -N
+3.2) smbclient //solarlab.htb/Documents -N
+3.3) mget details-file.xlsx -> credentials of some accounts
+
+4) login on http://report.solarlab.htb with blake creds
+4.1) try the functions -> travel approval has got a generate pdf funciton 
+4.2) exiftool to extract the file metadata -> the pdf was generated with ReportLab PDF Library
+4.3) CVE-2023-33733
+4.4) generate the powershell rev_shell b64 encoded
+4.5) pasting the code in the powershell -e section of this exploit https://github.com/c53elyas/CVE-2023-33733 will generate the malicious complete paylaod
+4.6) start the listener with rlwrap nc <ip> <port> -> paste the whole code snippet in the request parameters of the pdf gen function on travel approval
+4.7) shell pop into user flag
+
+5.1) enumerate users -> openfire user
+5.2) netstat -anop -> a lot of services up with the openfire service running
+5.3) port forward the service with chisel
+5.4) version 4.7.4 -> https://nvd.nist.gov/vuln/detail/CVE-2023-32315 -> rev_shell
+5.5) openfire folder files -> embedded-db
+5.6) admin password encrypted -> https://github.com/c0rdis/openfire_decrypt
+5.7) ./RunasCs.exe Administrator <password> "cmd /c type C:\Users\Administrator\Desktop\root.txt"
+
 
