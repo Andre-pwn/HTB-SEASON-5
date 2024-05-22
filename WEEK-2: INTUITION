@@ -49,7 +49,8 @@ port service
 8.2) lopez can access the /opt/runner2 folder and also sudo -l shows up that lopez can run as admin runner2
 8.3) https://gtfobins.github.io/gtfobins/ansible-playbook/ priv esc ansible playbook -> doesn't work
 8.4) usage says json file as argument
-8.5) after infinite researches and docs readings craft the json file 
+8.5) after infinite researches and reversing, craft the json file, adding ;bash in the filename
+8.6) the vuln will trigger running2 as admin, executing ;bash as root so we get the root shell 
 
 
 
