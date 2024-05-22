@@ -1,6 +1,6 @@
-Name: Intuition
-Difficulty: Hard
-OS: Linux
+Name: Mailing
+Difficulty: Easy
+OS: Windows
 
 1) nmap scan shows some windows services other than the web
 
